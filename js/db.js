@@ -4,7 +4,7 @@
 // ============================================
 
 const DB_NAME = 'warung_kasir_db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 const CATEGORIES = [
   'Sembako',
@@ -153,6 +153,17 @@ function openDB() {
           autoIncrement: true
         });
         txStore.createIndex('date', 'date', { unique: false });
+      }
+
+      // Debts store (added in v2)
+      if (!database.objectStoreNames.contains('debts')) {
+        const debtStore = database.createObjectStore('debts', {
+          keyPath: 'id',
+          autoIncrement: true
+        });
+        debtStore.createIndex('debtorName', 'debtorName', { unique: false });
+        debtStore.createIndex('status', 'status', { unique: false });
+        debtStore.createIndex('createdAt', 'createdAt', { unique: false });
       }
     };
 
@@ -322,6 +333,86 @@ function deleteTransaction(id) {
 }
 
 // ============================================
+// DEBT Operations
+// ============================================
+
+function addDebt(debt) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('debts', 'readwrite');
+    const store = tx.objectStore('debts');
+    const request = store.add({
+      ...debt,
+      createdAt: new Date().toISOString()
+    });
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function getAllDebts() {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('debts', 'readonly');
+    const store = tx.objectStore('debts');
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+      // Sort by date descending (newest first)
+      const results = request.result.sort((a, b) =>
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      resolve(results);
+    };
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function getDebtById(id) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('debts', 'readonly');
+    const store = tx.objectStore('debts');
+    const request = store.get(id);
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function updateDebt(debt) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('debts', 'readwrite');
+    const store = tx.objectStore('debts');
+    const request = store.put(debt);
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function deleteDebt(id) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('debts', 'readwrite');
+    const store = tx.objectStore('debts');
+    const request = store.delete(id);
+
+    request.onsuccess = () => resolve();
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function getDebtsByStatus(status) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('debts', 'readonly');
+    const store = tx.objectStore('debts');
+    const index = store.index('status');
+    const request = index.getAll(status);
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+// ============================================
 // Utility: Format currency to Rupiah
 // ============================================
 
@@ -360,7 +451,7 @@ function formatDateShort(dateStr) {
  * Confirm reset data (shows browser confirm dialog)
  */
 function confirmResetData() {
-  if (confirm('⚠️ RESET DATA\n\nSemua produk dan riwayat transaksi akan dihapus dan dikembalikan ke data awal.\n\nLanjutkan?')) {
+  if (confirm('⚠️ RESET DATA\n\nSemua produk, riwayat transaksi, dan data hutang akan dihapus dan dikembalikan ke data awal.\n\nLanjutkan?')) {
     resetDatabase();
   }
 }

@@ -1,24 +1,35 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="dark">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="description" content="Aplikasi kasir warung sembako offline - kelola produk, transaksi, dan riwayat penjualan">
+  <meta name="description"
+    content="Aplikasi kasir warung sembako offline - kelola produk, transaksi, dan riwayat penjualan">
   <meta name="theme-color" content="#10b981">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Kasir">
-  
+  <meta name="apple-mobile-web-app-title" content="Azkiya Mart">
+
   <title>Kasir Warung Sembako</title>
-  
+
   <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  
+
   <!-- Styles -->
   <link rel="stylesheet" href="css/style.css">
+
+  <!-- Anti-flash: apply saved theme before page renders -->
+  <script>
+    (function() {
+      var t = localStorage.getItem('app-theme');
+      if (t) document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
 </head>
+
 <body>
 
   <!-- ===== HEADER ===== -->
@@ -26,10 +37,15 @@
     <div class="logo">
       <div class="logo-icon">🏪</div>
       <div>
-        <div class="logo-text">Warung Sembako</div>
+        <div class="logo-text">Azkiya Mart</div>
         <div class="header-date" id="header-date">Loading...</div>
       </div>
     </div>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="theme-toggle-btn" title="Ganti Tema" aria-label="Toggle dark/light mode">
+      <span class="icon-sun">☀️</span>
+      <span class="icon-moon">🌙</span>
+    </button>
   </header>
 
   <!-- ===== PWA INSTALL BANNER ===== -->
@@ -49,12 +65,11 @@
     <!-- PAGE: KASIR (POS)               -->
     <!-- =============================== -->
     <div class="page active" id="page-cashier">
-      
+
       <!-- Search -->
       <div class="search-container">
         <span class="search-icon">🔍</span>
-        <input type="text" class="search-input" id="cashier-search" 
-               placeholder="Cari produk..." autocomplete="off">
+        <input type="text" class="search-input" id="cashier-search" placeholder="Cari produk..." autocomplete="off">
       </div>
 
       <!-- Category Filter -->
@@ -71,12 +86,12 @@
       <div class="cart-panel">
         <div class="cart-header">
           <h3>
-            🛒 Keranjang 
+            🛒 Keranjang
             <span class="cart-badge" id="cart-badge">0</span>
           </h3>
           <button class="cart-clear-btn" onclick="clearCart()">Kosongkan</button>
         </div>
-        
+
         <div class="cart-items" id="cart-items">
           <div class="cart-empty">
             <div class="empty-icon">🛒</div>
@@ -115,8 +130,8 @@
           <!-- Payment Section -->
           <div class="payment-section">
             <div class="payment-input-group">
-              <input type="number" class="payment-input" id="payment-amount" 
-                     placeholder="Jumlah bayar (Rp)" inputmode="numeric">
+              <input type="number" class="payment-input" id="payment-amount" placeholder="Jumlah bayar (Rp)"
+                inputmode="numeric">
             </div>
 
             <!-- Quick Cash Buttons -->
@@ -136,10 +151,15 @@
               Masukkan jumlah bayar
             </div>
 
-            <!-- Checkout Button -->
-            <button class="checkout-btn" id="checkout-btn" onclick="processCheckout()" disabled>
-              💰 Bayar & Simpan Transaksi
-            </button>
+            <!-- Checkout Buttons -->
+            <div class="checkout-buttons">
+              <button class="checkout-btn" id="checkout-btn" onclick="processCheckout()" disabled>
+                💰 Bayar Tunai
+              </button>
+              <button class="checkout-btn debt" id="debt-btn" onclick="openDebtorNameModal()" disabled>
+                💳 Hutang
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -149,24 +169,25 @@
     <!-- PAGE: PRODUK (MANAGEMENT)       -->
     <!-- =============================== -->
     <div class="page" id="page-products">
-      
+
       <div class="section-title">
         <span class="title-icon">📦</span>
         Manajemen Produk
-        <span style="font-size:0.75rem;font-weight:400;color:var(--text-muted);margin-left:auto;" id="product-count"></span>
+        <span style="font-size:0.75rem;font-weight:400;color:var(--text-muted);margin-left:auto;"
+          id="product-count"></span>
       </div>
 
       <!-- Toolbar: Search + Add Button -->
       <div class="toolbar">
         <div class="search-container">
           <span class="search-icon">🔍</span>
-          <input type="text" class="search-input" id="product-search" 
-                 placeholder="Cari produk..." autocomplete="off">
+          <input type="text" class="search-input" id="product-search" placeholder="Cari produk..." autocomplete="off">
         </div>
         <button class="btn-add" onclick="openAddProduct()">
           ➕ Tambah
         </button>
-        <button class="btn-add" onclick="confirmResetData()" style="background:linear-gradient(135deg,#ef4444,#f97316);">
+        <button class="btn-add" onclick="confirmResetData()"
+          style="background:linear-gradient(135deg,#ef4444,#f97316);">
           🔄 Reset
         </button>
       </div>
@@ -186,7 +207,7 @@
     <!-- PAGE: RIWAYAT (HISTORY)         -->
     <!-- =============================== -->
     <div class="page" id="page-history">
-      
+
       <div class="section-title">
         <span class="title-icon">📋</span>
         Riwayat Transaksi
@@ -195,31 +216,142 @@
       <!-- Stats Grid -->
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-label">Pendapatan Hari Ini</div>
+          <div class="stat-label">Tunai Hari Ini</div>
           <div class="stat-value accent" id="stat-today-revenue">Rp0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Hutang Hari Ini</div>
+          <div class="stat-value" id="stat-today-debt" style="color:var(--warning)">Rp0</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Transaksi Hari Ini</div>
           <div class="stat-value" id="stat-today-count">0 transaksi</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Item Terjual Hari Ini</div>
+          <div class="stat-label">Item Terjual</div>
           <div class="stat-value" id="stat-today-items">0 item</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Total Semua Pendapatan</div>
-          <div class="stat-value accent" id="stat-all-revenue">Rp0</div>
         </div>
       </div>
 
       <!-- Date Filter -->
       <div class="date-filter">
         <input type="date" id="history-date-filter">
-        <button class="chip" id="history-clear-filter" style="border-color:var(--accent);color:var(--accent);">Semua Tanggal</button>
+        <button class="chip" id="history-clear-filter" style="border-color:var(--accent);color:var(--accent);">Semua
+          Tanggal</button>
       </div>
 
       <!-- Transaction List -->
       <div class="transaction-list" id="transaction-list">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+
+    <!-- =============================== -->
+    <!-- PAGE: LAPORAN (REPORT)           -->
+    <!-- =============================== -->
+    <div class="page" id="page-report">
+
+      <div class="section-title">
+        <span class="title-icon">📊</span>
+        Laporan Penjualan
+      </div>
+
+      <!-- Period Selector -->
+      <div class="report-controls">
+        <div class="category-chips" id="report-period-chips">
+          <button class="chip active" data-period="daily" onclick="setReportPeriod('daily')">📅 Harian</button>
+          <button class="chip" data-period="weekly" onclick="setReportPeriod('weekly')">📆 Mingguan</button>
+        </div>
+        <div class="report-nav">
+          <button class="report-nav-btn" onclick="navigateReport(-1)">◀</button>
+          <span class="report-period-label" id="report-period-label">Memuat...</span>
+          <button class="report-nav-btn" onclick="navigateReport(1)">▶</button>
+        </div>
+      </div>
+
+      <!-- Report Stats -->
+      <div class="stats-grid report-stats">
+        <div class="stat-card">
+          <div class="stat-label">Pendapatan Tunai</div>
+          <div class="stat-value accent" id="report-stat-cash">Rp0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Penjualan Hutang</div>
+          <div class="stat-value" id="report-stat-debt" style="color:var(--warning)">Rp0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Transaksi</div>
+          <div class="stat-value" id="report-stat-count">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Rata-rata / Transaksi</div>
+          <div class="stat-value" id="report-stat-avg">Rp0</div>
+        </div>
+      </div>
+
+      <!-- Sales Chart -->
+      <div class="report-chart-card">
+        <h4 class="report-chart-title">📈 Grafik Penjualan</h4>
+        <div class="report-chart-container">
+          <canvas id="sales-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Top Products -->
+      <div class="report-section">
+        <h4 class="report-section-title">🏆 Produk Terlaris</h4>
+        <div class="top-products-list" id="report-top-products">
+          <!-- Generated by JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- =============================== -->
+    <!-- PAGE: HUTANG (DEBT)              -->
+    <!-- =============================== -->
+    <div class="page" id="page-debt">
+
+      <div class="section-title">
+        <span class="title-icon">💳</span>
+        Manajemen Hutang
+      </div>
+
+      <!-- Debt Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card danger">
+          <div class="stat-label">Total Hutang Belum Lunas</div>
+          <div class="stat-value accent" id="stat-total-debt">Rp0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Sudah Dibayar</div>
+          <div class="stat-value" id="stat-total-paid-debt">Rp0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Jumlah Penghutang</div>
+          <div class="stat-value" id="stat-debtor-count">0 orang</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Hutang Aktif</div>
+          <div class="stat-value" id="stat-debt-transactions">0 hutang</div>
+        </div>
+      </div>
+
+      <!-- Debt Search & Filter -->
+      <div class="search-container">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="debt-search" placeholder="Cari nama penghutang..."
+          autocomplete="off">
+      </div>
+
+      <div class="category-chips" id="debt-filter-chips">
+        <button class="chip active" data-filter="all">Semua</button>
+        <button class="chip" data-filter="unpaid">⏳ Belum Lunas</button>
+        <button class="chip" data-filter="paid">✅ Lunas</button>
+      </div>
+
+      <!-- Debt List -->
+      <div class="debt-list" id="debt-list">
         <!-- Generated by JS -->
       </div>
     </div>
@@ -240,6 +372,14 @@
       <span class="nav-icon">📋</span>
       <span class="nav-label">Riwayat</span>
     </button>
+    <button class="nav-item" data-page="report" id="nav-report">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Laporan</span>
+    </button>
+    <button class="nav-item" data-page="debt" id="nav-debt">
+      <span class="nav-icon">💳</span>
+      <span class="nav-label">Hutang</span>
+    </button>
   </nav>
 
   <!-- ===== FAB (Add Product) ===== -->
@@ -259,13 +399,12 @@
         <form id="product-form" onsubmit="event.preventDefault(); saveProduct();">
           <div class="form-group">
             <label class="form-label" for="product-name">Nama Produk</label>
-            <input type="text" class="form-input" id="product-name" 
-                   placeholder="Contoh: Beras 5kg" required>
+            <input type="text" class="form-input" id="product-name" placeholder="Contoh: Beras 5kg" required>
           </div>
           <div class="form-group">
             <label class="form-label" for="product-price">Harga (Rp)</label>
-            <input type="number" class="form-input" id="product-price" 
-                   placeholder="Contoh: 65000" min="0" required inputmode="numeric">
+            <input type="number" class="form-input" id="product-price" placeholder="Contoh: 65000" min="0" required
+              inputmode="numeric">
           </div>
           <div class="form-group">
             <label class="form-label" for="product-category">Kategori</label>
@@ -294,8 +433,8 @@
           </div>
           <div class="form-group">
             <label class="form-label" for="product-stock">Stok</label>
-            <input type="number" class="form-input" id="product-stock" 
-                   placeholder="Contoh: 50" min="0" required inputmode="numeric">
+            <input type="number" class="form-input" id="product-stock" placeholder="Contoh: 50" min="0" required
+              inputmode="numeric">
           </div>
           <div class="form-actions">
             <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Batal</button>
@@ -376,12 +515,108 @@
     </div>
   </div>
 
+  <!-- Debtor Name Input Modal (for debt checkout) -->
+  <div class="modal-overlay" id="debtor-name-modal">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h3>💳 Checkout Hutang</h3>
+        <button class="modal-close" onclick="closeDebtorNameModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="debtor-checkout-info">
+          <div class="debtor-total-label">Total Hutang</div>
+          <div class="debtor-total-value" id="debtor-total-display">Rp0</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="debtor-name-input">Nama Penghutang</label>
+          <input type="text" class="form-input" id="debtor-name-input" placeholder="Contoh: Pak Budi" required
+            autocomplete="off">
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-secondary" onclick="closeDebtorNameModal()">Batal</button>
+          <button class="btn btn-primary" onclick="processDebtCheckout()">📝 Simpan Hutang</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debt Detail Modal -->
+  <div class="modal-overlay" id="debt-detail-modal">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h3>📋 Detail Hutang</h3>
+        <button class="modal-close" onclick="closeDebtDetailModal()">✕</button>
+      </div>
+      <div class="modal-body" id="debt-detail-content">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment / Cicilan Modal -->
+  <div class="modal-overlay" id="payment-modal">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h3>💰 Bayar Cicilan</h3>
+        <button class="modal-close" onclick="closePaymentModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="payment-cicilan-info">
+          <div class="payment-cicilan-row">
+            <span>Penghutang</span>
+            <span class="payment-cicilan-name" id="payment-debtor-name">-</span>
+          </div>
+          <div class="payment-cicilan-row">
+            <span>Sisa Hutang</span>
+            <span class="payment-cicilan-remaining" id="payment-remaining">Rp0</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="payment-cicilan-amount">Jumlah Bayar (Rp)</label>
+          <input type="number" class="form-input" id="payment-cicilan-amount" placeholder="Masukkan jumlah..." min="1"
+            inputmode="numeric">
+        </div>
+        <div class="quick-cash" id="payment-quick-buttons">
+          <!-- Generated by JS -->
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-secondary" onclick="closePaymentModal()">Batal</button>
+          <button class="btn btn-primary" id="payment-process-btn">💰 Bayar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Debt Modal -->
+  <div class="modal-overlay confirm-modal" id="confirm-debt-delete-modal">
+    <div class="modal" style="max-width:380px;">
+      <div class="modal-handle"></div>
+      <div class="modal-body" style="padding-top:10px;">
+        <div class="confirm-message">
+          <div class="confirm-icon">⚠️</div>
+          <p>Yakin ingin menghapus hutang dari:</p>
+          <p class="item-name" id="confirm-debt-name">-</p>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-secondary" onclick="closeConfirmDebtDeleteModal()">Batal</button>
+          <button class="btn btn-danger" id="confirm-debt-delete-btn">🗑️ Hapus</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== SCRIPTS ===== -->
   <script src="js/db.js"></script>
   <script src="js/cart.js"></script>
   <script src="js/products.js"></script>
   <script src="js/history.js"></script>
+  <script src="js/debt.js"></script>
+  <script src="js/report.js"></script>
   <script src="js/app.js"></script>
 
 </body>
+
 </html>

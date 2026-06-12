@@ -330,8 +330,10 @@ function renderCart() {
   const clearBtn = document.getElementById('discount-clear');
   if (clearBtn) clearBtn.classList.toggle('active', currentDiscount === 0 && cart.length > 0);
 
-  // Update checkout button
+  // Update checkout button and debt button
   if (checkoutBtn) checkoutBtn.disabled = cart.length === 0;
+  const debtBtn = document.getElementById('debt-btn');
+  if (debtBtn) debtBtn.disabled = cart.length === 0;
 
   // Render items
   if (!cartItemsEl) return;
@@ -540,12 +542,37 @@ function generateReceiptHTML(tx) {
     </div>
   ` : '';
 
+  const isDebt = tx.isDebt === true;
+  const debtInfoHtml = isDebt ? `
+    <div class="receipt-debt-info">
+      <span class="receipt-debt-badge">💳 HUTANG</span>
+      <span class="receipt-debt-name">👤 ${escapeHtml(tx.debtorName || '-')}</span>
+    </div>
+  ` : '';
+
+  const paymentRowsHtml = isDebt ? `
+    <div class="receipt-row receipt-debt-status">
+      <span>Status</span>
+      <span class="receipt-debt-label">💳 Belum Dibayar</span>
+    </div>
+  ` : `
+    <div class="receipt-row">
+      <span>Bayar</span>
+      <span>${formatRupiah(tx.payment)}</span>
+    </div>
+    <div class="receipt-row">
+      <span>Kembalian</span>
+      <span>${formatRupiah(tx.change)}</span>
+    </div>
+  `;
+
   return `
     <div class="receipt" id="printable-receipt">
       <div class="receipt-header">
         <h4>🏪 Warung Sembako</h4>
         <p>${formatDate(tx.date)}</p>
         <p>No: #${String(tx.id).padStart(4, '0')}</p>
+        ${debtInfoHtml}
       </div>
       <div class="receipt-items">
         ${itemsHtml}
@@ -560,14 +587,7 @@ function generateReceiptHTML(tx) {
           <span>TOTAL</span>
           <span class="amount">${formatRupiah(tx.total)}</span>
         </div>
-        <div class="receipt-row">
-          <span>Bayar</span>
-          <span>${formatRupiah(tx.payment)}</span>
-        </div>
-        <div class="receipt-row">
-          <span>Kembalian</span>
-          <span>${formatRupiah(tx.change)}</span>
-        </div>
+        ${paymentRowsHtml}
       </div>
     </div>
     <button class="btn-print" onclick="printReceipt()">🖨️ Cetak Struk</button>

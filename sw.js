@@ -3,7 +3,7 @@
 // Warung Sembako Kasir PWA
 // ============================================
 
-const CACHE_NAME = 'warung-kasir-v3';
+const CACHE_NAME = 'warung-kasir-v5';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -13,6 +13,8 @@ const ASSETS_TO_CACHE = [
   './js/cart.js',
   './js/products.js',
   './js/history.js',
+  './js/debt.js',
+  './js/report.js',
   './js/app.js',
   './manifest.json',
   './icons/icon-192.png',

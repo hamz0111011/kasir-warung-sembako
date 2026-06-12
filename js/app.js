@@ -13,6 +13,9 @@ async function initApp() {
     // Open database
     await openDB();
 
+    // Setup theme toggle (before anything else so theme loads fast)
+    setupThemeToggle();
+
     // Set up navigation
     setupNavigation();
 
@@ -20,6 +23,7 @@ async function initApp() {
     setupCashierFilters();
     setupProductFilters();
     setupHistoryFilters();
+    setupDebtFilters();
 
     // Set up payment input
     setupPaymentInput();
@@ -35,6 +39,9 @@ async function initApp() {
 
     // Handle PWA install prompt
     setupPWAInstall();
+
+    // Setup chart resize handler
+    setupChartResize();
 
     // Load initial page
     await switchPage('cashier');
@@ -89,6 +96,12 @@ async function switchPage(pageName) {
       break;
     case 'history':
       await initHistoryPage();
+      break;
+    case 'report':
+      await initReportPage();
+      break;
+    case 'debt':
+      await initDebtPage();
       break;
   }
 }
@@ -180,6 +193,35 @@ function setupHistoryFilters() {
     clearBtn.addEventListener('click', () => {
       if (dateInput) dateInput.value = '';
       renderTransactionList();
+    });
+  }
+}
+
+/**
+ * Setup debt page search and filter
+ */
+function setupDebtFilters() {
+  const searchInput = document.getElementById('debt-search');
+  if (searchInput) {
+    let debounceTimer;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        renderDebtList(searchInput.value, getCurrentDebtFilter());
+      }, 300);
+    });
+  }
+
+  const chipsContainer = document.getElementById('debt-filter-chips');
+  if (chipsContainer) {
+    chipsContainer.addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+
+      chipsContainer.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+
+      renderDebtList(searchInput?.value || '', chip.dataset.filter);
     });
   }
 }
@@ -319,5 +361,51 @@ function setupPWAInstall() {
   });
 }
 
+/**
+ * Setup chart resize handler for responsive canvas
+ */
+function setupChartResize() {
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (currentPage === 'report') {
+        renderReport();
+      }
+    }, 250);
+  });
+}
+
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', initApp);
+
+/**
+ * Setup Dark / Light theme toggle
+ */
+function setupThemeToggle() {
+  const htmlEl = document.documentElement;
+  const toggleBtn = document.getElementById('theme-toggle-btn');
+
+  // Load saved preference, default to 'dark'
+  const savedTheme = localStorage.getItem('app-theme') || 'dark';
+  htmlEl.setAttribute('data-theme', savedTheme);
+
+  if (!toggleBtn) return;
+
+  toggleBtn.addEventListener('click', () => {
+    const current = htmlEl.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+
+    // Animate the button spin
+    toggleBtn.style.transform = 'rotate(360deg) scale(1.1)';
+    setTimeout(() => { toggleBtn.style.transform = ''; }, 350);
+
+    htmlEl.setAttribute('data-theme', next);
+    localStorage.setItem('app-theme', next);
+
+    showToast(
+      next === 'light' ? '☀️ Mode Terang aktif' : '🌙 Mode Gelap aktif',
+      'success'
+    );
+  });
+}
